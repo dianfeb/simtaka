@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-// ============ GRADE ============
 class Grade extends Model
 {
     use HasFactory, SoftDeletes;
@@ -68,27 +67,45 @@ class Grade extends Model
         return $query->where('semester', '2');
     }
 
-    // Helper untuk auto-convert score ke grade
-    public function setScoreAttribute($value)
+    // Accessor untuk badge colors
+    public function getPredicateBadgeAttribute()
     {
-        $this->attributes['score'] = $value;
-        
-        // Auto set grade berdasarkan score
-        if ($value >= 90) {
-            $this->attributes['grade'] = 'A';
-            $this->attributes['predicate'] = 'BSB';
-        } elseif ($value >= 80) {
-            $this->attributes['grade'] = 'B';
-            $this->attributes['predicate'] = 'BSH';
-        } elseif ($value >= 70) {
-            $this->attributes['grade'] = 'C';
-            $this->attributes['predicate'] = 'BSH';
-        } elseif ($value >= 60) {
-            $this->attributes['grade'] = 'D';
-            $this->attributes['predicate'] = 'MB';
-        } else {
-            $this->attributes['grade'] = 'E';
-            $this->attributes['predicate'] = 'MB';
-        }
+        $badges = [
+            'BSB' => 'bg-green',
+            'BSH' => 'bg-blue',
+            'MB' => 'bg-yellow',
+        ];
+
+        return $badges[$this->predicate] ?? 'bg-secondary';
+    }
+
+    public function getGradeBadgeAttribute()
+    {
+        $badges = [
+            'A' => 'bg-green',
+            'B' => 'bg-blue',
+            'C' => 'bg-yellow',
+            'D' => 'bg-orange',
+            'E' => 'bg-red',
+        ];
+
+        return $badges[$this->grade] ?? 'bg-secondary';
+    }
+
+    // Helper method (bukan auto-setter)
+    public static function calculateGradeFromScore($score)
+    {
+        if ($score >= 86) return 'A';
+        if ($score >= 71) return 'B';
+        if ($score >= 56) return 'C';
+        if ($score >= 41) return 'D';
+        return 'E';
+    }
+
+    public static function calculatePredicateFromScore($score)
+    {
+        if ($score >= 86) return 'BSB';
+        if ($score >= 71) return 'BSH';
+        return 'MB';
     }
 }

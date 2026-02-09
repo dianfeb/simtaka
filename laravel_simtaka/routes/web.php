@@ -86,6 +86,8 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', 'role:guru'])->g
     // Savings
     Route::get('/savings', [TeacherController::class, 'savings'])->name('savings.index');
     Route::post('/savings/transaction', [TeacherController::class, 'savingsTransaction'])->name('savings.transaction');
+
+    
 });
 
 /*

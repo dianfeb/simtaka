@@ -10,7 +10,6 @@ use App\Models\ClassRoom;
 use App\Models\PaymentType;
 use App\Models\AcademicYear;
 use Illuminate\Database\Seeder;
-
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -38,7 +37,11 @@ class DatabaseSeeder extends Seeder
         // 5. Create Payment Types
         $this->createPaymentTypes();
 
-         Student::factory(50)->create();
+        // 6. Create Students (50 siswa dummy)
+        Student::factory(50)->create();
+        
+        // 7. Create Enrollments - TAMBAHKAN INI!
+        $this->call(EnrollmentSeeder::class);
     }
 
     private function createUsers()
@@ -191,5 +194,4 @@ class DatabaseSeeder extends Seeder
 
         echo "✓ Payment types created\n";
     }
-    
 }

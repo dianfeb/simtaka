@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('savings_book_id')->constrained()->onDelete('cascade');
             $table->string('transaction_code')->unique(); // TRX-2024-0001
             $table->date('transaction_date');
-            $table->enum('type', ['debit', 'credit']); // debit = masuk, credit = keluar
+            $table->enum('type', ['deposit', 'withdraw']); // debit = masuk, credit = keluar
             $table->decimal('amount', 10, 2);
             $table->decimal('balance_before', 12, 2); // Saldo sebelum transaksi
             $table->decimal('balance_after', 12, 2); // Saldo setelah transaksi
