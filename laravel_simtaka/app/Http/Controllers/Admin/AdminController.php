@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use App\Models\User;
-use App\Models\Student;
 use App\Models\Payment;
+use App\Models\Student;
+use App\Models\Enrollment;
 use App\Models\PaymentType;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -315,11 +317,18 @@ class AdminController extends Controller
      */
     public function students()
     {
+        $stats = [
+            'total' => Student::count(),
+            'pending' => Student::where('status', 'pending')->count(),
+            'active' => Student::where('status', 'active')->count(),
+            'rejected' => Student::where('status', 'rejected')->count(),
+        ];
+
         $students = Student::with(['parent', 'currentEnrollment.classRoom'])
             ->latest()
             ->paginate(20);
 
-        return view('admin.students.index', compact('students'));
+        return view('admin.students.index', compact('students', 'stats'));
     }
 
     public function showStudent(Student $student)
@@ -333,5 +342,98 @@ class AdminController extends Controller
         ]);
 
         return view('admin.students.show', compact('student'));
+    }
+
+    /**
+     * Student Approval List
+     */
+    /**
+     * Student Approval List
+     */
+    public function studentsApproval()
+    {
+        $status = request('status', 'pending');
+
+        $stats = [
+            'pending' => Student::where('status', 'pending')->count(),
+            'active' => Student::where('status', 'active')->count(),
+            'rejected' => Student::where('status', 'rejected')->count(),
+            'total' => Student::count(),
+        ];
+
+        $students = Student::with('parent')
+            ->where('status', $status)
+            ->latest()
+            ->paginate(12);
+
+        $classes = \App\Models\ClassRoom::all();
+
+        return view('admin.students.approval', compact('students', 'status', 'stats', 'classes'));
+    }
+
+    /**
+     * Approve or Reject Student
+     */
+    public function approveStudent(Request $request, Student $student)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'rejection_reason' => 'required_if:action,reject',
+            'class_id' => 'required_if:action,approve|exists:classes,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            if ($request->action === 'approve') {
+                // Update student status to active
+                $student->update([
+                    'status' => 'active',
+                    'approved_at' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+
+                // Get active academic year
+                $academicYear = AcademicYear::where('is_active', true)->first();
+
+                // Create enrollment
+                if ($academicYear && $request->class_id) {
+                    \App\Models\Enrollment::create([
+                        'student_id' => $student->id,
+                        'class_id' => $request->class_id,
+                        'academic_year_id' => $academicYear->id,
+                        'enrollment_date' => now(),
+                        'status' => 'active',
+                    ]);
+                }
+
+                DB::commit();
+
+                // TODO: Send email notification to parent
+                // Mail::to($student->parent->email)->send(new StudentApproved($student));
+
+                return redirect()->route('admin.students.approval', ['status' => 'active'])
+                    ->with('success', 'Siswa ' . $student->name . ' berhasil diterima dan di-enroll ke kelas');
+
+            } else {
+                // Reject student
+                $student->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => $request->rejection_reason,
+                    'rejected_at' => now(),
+                    'rejected_by' => auth()->id(),
+                ]);
+
+                DB::commit();
+
+                // TODO: Send email notification to parent
+                // Mail::to($student->parent->email)->send(new StudentRejected($student));
+
+                return redirect()->route('admin.students.approval', ['status' => 'rejected'])
+                    ->with('success', 'Pendaftaran ' . $student->name . ' ditolak');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

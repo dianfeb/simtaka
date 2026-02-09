@@ -21,6 +21,15 @@
                 </h2>
             </div>
             <div class="col-auto">
+                @if($student->status == 'pending')
+                    <a href="{{ route('admin.students.approval', ['status' => 'pending']) }}" class="btn btn-yellow me-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M5 12l5 5l10 -10"></path>
+                        </svg>
+                        Verifikasi Siswa
+                    </a>
+                @endif
                 <button onclick="window.print()" class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -37,6 +46,63 @@
 
 <div class="page-body">
     <div class="container-xl">
+        <!-- Status Alert -->
+        @if($student->status == 'pending')
+            <div class="alert alert-warning mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                            <path d="M12 8l0 4" />
+                            <path d="M12 16l.01 0" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="alert-title">Pendaftaran Menunggu Verifikasi</h4>
+                        <div class="text-muted">Siswa ini baru mendaftar dan menunggu persetujuan admin. <a href="{{ route('admin.students.approval', ['status' => 'pending']) }}" class="alert-link">Klik di sini untuk verifikasi</a></div>
+                    </div>
+                </div>
+            </div>
+        @elseif($student->status == 'rejected')
+            <div class="alert alert-danger mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M18 6l-12 12" />
+                            <path d="M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="alert-title">Pendaftaran Ditolak</h4>
+                        <div class="text-muted">
+                            <strong>Alasan:</strong> {{ $student->rejection_reason ?? 'Tidak ada alasan yang diberikan' }}
+                            <br>
+                            <strong>Ditolak oleh:</strong> {{ $student->rejectedBy->name ?? '-' }} pada {{ $student->rejected_at ? $student->rejected_at->format('d/m/Y H:i') : '-' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @elseif($student->status == 'active' && $student->approved_at)
+            <div class="alert alert-success mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M5 12l5 5l10 -10"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="alert-title">Siswa Aktif</h4>
+                        <div class="text-muted">
+                            Disetujui oleh {{ $student->approvedBy->name ?? '-' }} pada {{ $student->approved_at->format('d/m/Y H:i') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <!-- Student Profile Card -->
         <div class="row">
             <div class="col-md-4">
@@ -50,10 +116,14 @@
                             <div class="text-muted mb-3">"{{ $student->nickname }}"</div>
                         @endif
                         <div class="mt-3">
-                            @if($student->status == 'active')
+                            @if($student->status == 'pending')
+                                <span class="badge bg-yellow-lt badge-pill">Pending Verifikasi</span>
+                            @elseif($student->status == 'active')
                                 <span class="badge bg-success-lt badge-pill">Aktif</span>
+                            @elseif($student->status == 'rejected')
+                                <span class="badge bg-danger-lt badge-pill">Ditolak</span>
                             @else
-                                <span class="badge bg-danger-lt badge-pill">{{ ucfirst($student->status) }}</span>
+                                <span class="badge bg-secondary-lt badge-pill">{{ ucfirst($student->status) }}</span>
                             @endif
                             @if($student->gender == 'L')
                                 <span class="badge bg-azure-lt badge-pill">Laki-laki</span>
@@ -167,6 +237,7 @@
                 </div>
 
                 <!-- Enrollment History -->
+                @if($student->status == 'active')
                 <div class="card mt-3">
                     <div class="card-header">
                         <h3 class="card-title">Riwayat Kelas</h3>
@@ -206,10 +277,12 @@
                         @endif
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 
         <!-- Payment History -->
+        @if($student->status == 'active')
         <div class="row mt-3">
             <div class="col-12">
                 <div class="card">
@@ -343,6 +416,7 @@
                 </div>
             </div>
         @endif
+        @endif
     </div>
 </div>
 
@@ -350,7 +424,8 @@
     @media print {
         .page-header .btn,
         .navbar,
-        .footer {
+        .footer,
+        .alert {
             display: none !important;
         }
         

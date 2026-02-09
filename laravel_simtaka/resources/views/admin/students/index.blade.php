@@ -14,6 +14,16 @@
             </div>
             <div class="col-auto">
                 <div class="btn-list">
+                    <a href="{{ route('admin.students.approval') }}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M5 12l5 5l10 -10"></path>
+                        </svg>
+                        Verifikasi Pendaftaran
+                        @if($stats['pending'] > 0)
+                            <span class="badge bg-red ms-2">{{ $stats['pending'] }}</span>
+                        @endif
+                    </a>
                     <button onclick="window.print()" class="btn btn-outline-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -48,7 +58,7 @@
                             </div>
                             <div>
                                 <div class="small text-muted">Total Siswa</div>
-                                <h3 class="mb-0">{{ $students->total() }}</h3>
+                                <h3 class="mb-0">{{ $stats['total'] }}</h3>
                             </div>
                         </div>
                     </div>
@@ -66,7 +76,7 @@
                             </div>
                             <div>
                                 <div class="small text-muted">Siswa Aktif</div>
-                                <h3 class="mb-0 text-success">{{ $students->where('status', 'active')->count() }}</h3>
+                                <h3 class="mb-0 text-success">{{ $stats['active'] }}</h3>
                             </div>
                         </div>
                     </div>
@@ -77,15 +87,16 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="me-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-pink" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-yellow" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                    <path d="M9 11l3 3l8 -8"></path>
-                                    <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"></path>
+                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                    <path d="M12 8l0 4" />
+                                    <path d="M12 16l.01 0" />
                                 </svg>
                             </div>
                             <div>
-                                <div class="small text-muted">Laki-laki</div>
-                                <h3 class="mb-0 text-pink">{{ $students->where('gender', 'L')->count() }}</h3>
+                                <div class="small text-muted">Pending</div>
+                                <h3 class="mb-0 text-yellow">{{ $stats['pending'] }}</h3>
                             </div>
                         </div>
                     </div>
@@ -96,15 +107,15 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="me-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-purple" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-red" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                    <path d="M9 11l3 3l8 -8"></path>
-                                    <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"></path>
+                                    <path d="M18 6l-12 12" />
+                                    <path d="M6 6l12 12" />
                                 </svg>
                             </div>
                             <div>
-                                <div class="small text-muted">Perempuan</div>
-                                <h3 class="mb-0 text-purple">{{ $students->where('gender', 'P')->count() }}</h3>
+                                <div class="small text-muted">Ditolak</div>
+                                <h3 class="mb-0 text-red">{{ $stats['rejected'] }}</h3>
                             </div>
                         </div>
                     </div>
@@ -187,10 +198,22 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($student->status == 'active')
+                                        @if($student->status == 'pending')
+                                            <span class="badge bg-yellow">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                    <path d="M12 8l0 4" />
+                                                    <path d="M12 16l.01 0" />
+                                                </svg>
+                                                Pending
+                                            </span>
+                                        @elseif($student->status == 'active')
                                             <span class="badge bg-success">Aktif</span>
+                                        @elseif($student->status == 'rejected')
+                                            <span class="badge bg-danger">Ditolak</span>
                                         @else
-                                            <span class="badge bg-danger">{{ ucfirst($student->status) }}</span>
+                                            <span class="badge bg-secondary">{{ ucfirst($student->status) }}</span>
                                         @endif
                                     </td>
                                     <td>

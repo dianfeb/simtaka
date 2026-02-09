@@ -86,12 +86,12 @@ class ParentController extends Controller
             'mother_name' => $validated['mother_name'],
             'mother_phone' => $validated['mother_phone'] ?? null,
             'mother_job' => $validated['mother_job'] ?? null,
-            'status' => 'active',
+            'status' => 'pending', // Status pending, menunggu approval admin
             'registration_date' => today(),
         ]);
 
         return redirect()->route('parent.dashboard')
-            ->with('success', 'Data anak berhasil didaftarkan. NIS: ' . $nis);
+            ->with('success', 'Data anak berhasil didaftarkan dengan NIS: ' . $nis . '. Menunggu verifikasi admin.');
     }
 
     /**
@@ -214,7 +214,7 @@ class ParentController extends Controller
     /**
      * View Savings Book
      */
-    public function savingsBook(Student $student)
+   public function savings(Student $student)
     {
         // Pastikan parent hanya bisa lihat anaknya sendiri
         if ($student->parent_id !== auth()->id()) {

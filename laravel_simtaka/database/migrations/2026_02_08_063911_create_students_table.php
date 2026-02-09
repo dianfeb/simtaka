@@ -29,11 +29,22 @@ return new class extends Migration
             $table->string('mother_job')->nullable();
             
             // Status
-            $table->enum('status', ['active', 'inactive', 'graduated'])->default('active');
+            $table->enum('status', ['pending', 'active', 'inactive', 'rejected', 'graduated'])->default('pending');
             $table->date('registration_date');
+            
+            // Approval fields
+            $table->timestamp('approved_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->timestamp('rejected_at')->nullable();
+            $table->unsignedBigInteger('rejected_by')->nullable();
             
             $table->timestamps();
             $table->softDeletes();
+            
+            // Foreign keys for approval
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('rejected_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

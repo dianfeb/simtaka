@@ -63,6 +63,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Student Management
     Route::prefix('students')->name('students.')->group(function () {
         Route::get('/', [AdminController::class, 'students'])->name('index');
+        Route::get('/approval', [AdminController::class, 'studentsApproval'])->name('approval');
+        Route::post('/{student}/approve', [AdminController::class, 'approveStudent'])->name('approve');
         Route::get('/{student}', [AdminController::class, 'showStudent'])->name('show');
     });
 });
