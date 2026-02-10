@@ -23,4 +23,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('academic_years');
     }
+
+    
 };
