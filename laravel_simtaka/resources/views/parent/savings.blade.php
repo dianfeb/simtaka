@@ -114,7 +114,7 @@
                                         <span class="badge bg-blue-lt">{{ $transaction->transaction_code }}</span>
                                     </td>
                                     <td>
-                                        @if($transaction->type == 'debit')
+                                        @if($transaction->type == 'deposit')
                                             <span class="badge bg-green">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-sm">
                                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -134,7 +134,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($transaction->type == 'debit')
+                                        @if($transaction->type == 'deposit')
                                             <span class="text-green">+Rp {{ number_format($transaction->amount, 0, ',', '.') }}</span>
                                         @else
                                             <span class="text-orange">-Rp {{ number_format($transaction->amount, 0, ',', '.') }}</span>
@@ -169,10 +169,10 @@
                             <div class="card-body">
                                 <div class="subheader">Total Setoran</div>
                                 <div class="h2 text-green mb-0">
-                                    Rp {{ number_format($savingsBook->transactions->where('type', 'debit')->sum('amount'), 0, ',', '.') }}
+                                    Rp {{ number_format($savingsBook->transactions->where('type', 'deposit')->sum('amount'), 0, ',', '.') }}
                                 </div>
                                 <div class="text-secondary">
-                                    {{ $savingsBook->transactions->where('type', 'debit')->count() }} transaksi
+                                    {{ $savingsBook->transactions->where('type', 'deposit')->count() }} transaksi
                                 </div>
                             </div>
                         </div>
@@ -182,10 +182,10 @@
                             <div class="card-body">
                                 <div class="subheader">Total Penarikan</div>
                                 <div class="h2 text-orange mb-0">
-                                    Rp {{ number_format($savingsBook->transactions->where('type', 'credit')->sum('amount'), 0, ',', '.') }}
+                                    Rp {{ number_format($savingsBook->transactions->where('type', 'withdraw')->sum('amount'), 0, ',', '.') }}
                                 </div>
                                 <div class="text-secondary">
-                                    {{ $savingsBook->transactions->where('type', 'credit')->count() }} transaksi
+                                    {{ $savingsBook->transactions->where('type', 'withdraw')->count() }} transaksi
                                 </div>
                             </div>
                         </div>

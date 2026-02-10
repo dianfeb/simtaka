@@ -88,6 +88,7 @@
                                     <option value="orang_tua" {{ old('role') == 'orang_tua' ? 'selected' : '' }}>
                                         Orang Tua
                                     </option>
+                                    
                                 </select>
                                 @error('role')
                                     <div class="invalid-feedback">{{ $message }}</div>

@@ -79,10 +79,14 @@ class Student extends Model
     }
 
     // Helper Methods
-    public function getAgeAttribute()
-    {
-        return $this->birth_date->age;
+   public function getAgeAttribute()
+{
+    if (!$this->birth_date) {
+        return null;
     }
+    
+    return $this->birth_date->age;
+}
 
     public function getFullNameAttribute()
     {
