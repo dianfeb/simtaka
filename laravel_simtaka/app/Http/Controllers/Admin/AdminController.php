@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\Subject;
 use App\Models\Enrollment;
 use App\Models\PaymentType;
 use App\Models\AcademicYear;
@@ -436,4 +437,308 @@ class AdminController extends Controller
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * ==========================================
+     * CLASSES MANAGEMENT
+     * ==========================================
+     */
+    public function classes()
+{
+    $classes = \App\Models\ClassRoom::with('teacher')
+        ->withCount(['students as active_students_count' => function($q) {
+            $q->where('students.status', 'active'); // Specify the table name
+        }])
+        ->get();
+    
+    $teachers = User::where('role', 'guru')->get();
+    
+    return view('admin.classes.index', compact('classes', 'teachers'));
+}
+
+    public function storeClass(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'level' => 'required|in:A,B',
+            'teacher_id' => 'nullable|exists:users,id',
+            'capacity' => 'required|integer|min:1',
+            'description' => 'nullable|string',
+        ]);
+
+        \App\Models\ClassRoom::create($request->all());
+
+        return redirect()->route('admin.classes.index')
+            ->with('success', 'Kelas berhasil ditambahkan');
+    }
+
+    public function updateClass(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'level' => 'required|in:A,B',
+            'teacher_id' => 'nullable|exists:users,id',
+            'capacity' => 'required|integer|min:1',
+            'description' => 'nullable|string',
+        ]);
+
+        $class = \App\Models\ClassRoom::findOrFail($id);
+        $class->update($request->all());
+
+        return redirect()->route('admin.classes.index')
+            ->with('success', 'Kelas berhasil diupdate');
+    }
+
+    public function destroyClass($id)
+    {
+        $class = \App\Models\ClassRoom::findOrFail($id);
+        
+        // Check if class has students
+        if ($class->students()->exists()) {
+            return redirect()->route('admin.classes.index')
+                ->with('error', 'Tidak dapat menghapus kelas yang masih memiliki siswa');
+        }
+        
+        $class->delete();
+
+        return redirect()->route('admin.classes.index')
+            ->with('success', 'Kelas berhasil dihapus');
+    }
+
+    /**
+     * ==========================================
+     * SUBJECTS MANAGEMENT
+     * ==========================================
+     */
+    public function subjects()
+    {
+        $subjects = Subject::orderBy('order')->get();
+        return view('admin.subjects.index', compact('subjects'));
+    }
+
+    public function storeSubject(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:100',
+        'code' => 'required|string|max:10|unique:subjects,code',
+        'description' => 'nullable|string',
+    ]);
+
+    $lastOrder = Subject::max('order') ?? 0;
+
+    Subject::create([
+        'name' => $request->name,
+        'code' => $request->code,
+        'description' => $request->description,
+        'is_active' => $request->is_active == 1, // Ubah ini
+        'order' => $lastOrder + 1,
+    ]);
+
+    return redirect()->route('admin.subjects.index')
+        ->with('success', 'Mata pelajaran berhasil ditambahkan');
+}
+
+public function updateSubject(Request $request, Subject $subject)
+{
+    $request->validate([
+        'name' => 'required|string|max:100',
+        'code' => 'required|string|max:10|unique:subjects,code,' . $subject->id,
+        'description' => 'nullable|string',
+    ]);
+
+    $subject->update([
+        'name' => $request->name,
+        'code' => $request->code,
+        'description' => $request->description,
+        'is_active' => $request->is_active == 1, // Ubah ini
+    ]);
+
+    return redirect()->route('admin.subjects.index')
+        ->with('success', 'Mata pelajaran berhasil diupdate');
+}
+
+    public function destroySubject(Subject $subject)
+    {
+        // Check if subject has grades
+        if ($subject->grades()->exists()) {
+            return redirect()->route('admin.subjects.index')
+                ->with('error', 'Tidak dapat menghapus mata pelajaran yang sudah memiliki nilai');
+        }
+        
+        $subject->delete();
+
+        return redirect()->route('admin.subjects.index')
+            ->with('success', 'Mata pelajaran berhasil dihapus');
+    }
+
+    public function reorderSubjects(Request $request)
+    {
+        foreach ($request->order as $item) {
+            Subject::where('id', $item['id'])->update(['order' => $item['order']]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * ==========================================
+     * PAYMENT TYPES MANAGEMENT
+     * ==========================================
+     */
+    public function paymentTypes()
+    {
+        $paymentTypes = PaymentType::all();
+        return view('admin.payment-types.index', compact('paymentTypes'));
+    }
+
+    public function storePaymentType(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'amount' => 'required|numeric|min:0',
+            'is_monthly' => 'boolean',
+            'is_active' => 'boolean',
+            'description' => 'nullable|string',
+        ]);
+
+        PaymentType::create([
+            'name' => $request->name,
+            'amount' => $request->amount,
+            'is_monthly' => $request->has('is_monthly'),
+            'is_active' => $request->has('is_active'),
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('admin.payment-types.index')
+            ->with('success', 'Jenis pembayaran berhasil ditambahkan');
+    }
+
+    public function updatePaymentType(Request $request, PaymentType $paymentType)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'amount' => 'required|numeric|min:0',
+            'is_monthly' => 'boolean',
+            'is_active' => 'boolean',
+            'description' => 'nullable|string',
+        ]);
+
+        $paymentType->update([
+            'name' => $request->name,
+            'amount' => $request->amount,
+            'is_monthly' => $request->has('is_monthly'),
+            'is_active' => $request->has('is_active'),
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('admin.payment-types.index')
+            ->with('success', 'Jenis pembayaran berhasil diupdate');
+    }
+
+    public function destroyPaymentType(PaymentType $paymentType)
+    {
+        // Check if payment type has payments
+        if ($paymentType->payments()->exists()) {
+            return redirect()->route('admin.payment-types.index')
+                ->with('error', 'Tidak dapat menghapus jenis pembayaran yang sudah memiliki transaksi');
+        }
+        
+        $paymentType->delete();
+
+        return redirect()->route('admin.payment-types.index')
+            ->with('success', 'Jenis pembayaran berhasil dihapus');
+    }
+
+    /**
+     * ==========================================
+     * ACADEMIC YEARS MANAGEMENT
+     * ==========================================
+     */
+    public function academicYears()
+    {
+        $academicYears = AcademicYear::withCount('enrollments')
+            ->orderBy('start_date', 'desc')
+            ->get();
+        
+        return view('admin.academic-years.index', compact('academicYears'));
+    }
+
+    public function storeAcademicYear(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'semester' => 'required|in:1,2',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'description' => 'nullable|string',
+        ]);
+
+        AcademicYear::create([
+            'name' => $request->name,
+            'semester' => $request->semester,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'description' => $request->description,
+            'is_active' => false,
+        ]);
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', 'Tahun ajaran berhasil ditambahkan');
+    }
+
+    public function updateAcademicYear(Request $request, AcademicYear $academicYear)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'semester' => 'required|in:1,2',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'description' => 'nullable|string',
+        ]);
+
+        $academicYear->update([
+            'name' => $request->name,
+            'semester' => $request->semester,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', 'Tahun ajaran berhasil diupdate');
+    }
+
+    public function activateAcademicYear(AcademicYear $academicYear)
+    {
+        // Deactivate all other academic years
+        AcademicYear::where('id', '!=', $academicYear->id)->update(['is_active' => false]);
+        
+        // Activate this academic year
+        $academicYear->update(['is_active' => true]);
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', 'Tahun ajaran ' . $academicYear->name . ' berhasil diaktifkan');
+    }
+
+    public function destroyAcademicYear(AcademicYear $academicYear)
+    {
+        // Cannot delete active academic year
+        if ($academicYear->is_active) {
+            return redirect()->route('admin.academic-years.index')
+                ->with('error', 'Tidak dapat menghapus tahun ajaran yang sedang aktif');
+        }
+        
+        // Check if has enrollments
+        if ($academicYear->enrollments()->exists()) {
+            return redirect()->route('admin.academic-years.index')
+                ->with('error', 'Tidak dapat menghapus tahun ajaran yang sudah memiliki siswa terdaftar');
+        }
+        
+        $academicYear->delete();
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', 'Tahun ajaran berhasil dihapus');
+    }
+
+    
 }

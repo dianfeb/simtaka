@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('code')->unique(); // AGM, BHS, MTK
             $table->text('description')->nullable();
             $table->integer('order')->default(0);
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

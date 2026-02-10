@@ -67,6 +67,38 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
         Route::post('/{student}/approve', [AdminController::class, 'approveStudent'])->name('approve');
         Route::get('/{student}', [AdminController::class, 'showStudent'])->name('show');
     });
+
+
+        // Master Data Management
+    Route::prefix('classes')->name('classes.')->group(function () {
+        Route::get('/', [AdminController::class, 'classes'])->name('index');
+        Route::post('/', [AdminController::class, 'storeClass'])->name('store');
+        Route::put('/{id}', [AdminController::class, 'updateClass'])->name('update');
+        Route::delete('/{id}', [AdminController::class, 'destroyClass'])->name('destroy');
+    });
+
+    Route::prefix('subjects')->name('subjects.')->group(function () {
+        Route::get('/', [AdminController::class, 'subjects'])->name('index');
+        Route::post('/', [AdminController::class, 'storeSubject'])->name('store');
+        Route::put('/{subject}', [AdminController::class, 'updateSubject'])->name('update');
+        Route::delete('/{subject}', [AdminController::class, 'destroySubject'])->name('destroy');
+        Route::post('/reorder', [AdminController::class, 'reorderSubjects'])->name('reorder');
+    });
+
+    Route::prefix('payment-types')->name('payment-types.')->group(function () {
+        Route::get('/', [AdminController::class, 'paymentTypes'])->name('index');
+        Route::post('/', [AdminController::class, 'storePaymentType'])->name('store');
+        Route::put('/{paymentType}', [AdminController::class, 'updatePaymentType'])->name('update');
+        Route::delete('/{paymentType}', [AdminController::class, 'destroyPaymentType'])->name('destroy');
+    });
+
+    Route::prefix('academic-years')->name('academic-years.')->group(function () {
+        Route::get('/', [AdminController::class, 'academicYears'])->name('index');
+        Route::post('/', [AdminController::class, 'storeAcademicYear'])->name('store');
+        Route::put('/{academicYear}', [AdminController::class, 'updateAcademicYear'])->name('update');
+        Route::put('/{academicYear}/activate', [AdminController::class, 'activateAcademicYear'])->name('activate');
+        Route::delete('/{academicYear}', [AdminController::class, 'destroyAcademicYear'])->name('destroy');
+    });
 });
 
 /*

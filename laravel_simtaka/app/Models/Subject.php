@@ -16,6 +16,11 @@ class Subject extends Model
         'code',
         'description',
         'order',
+        'is_active'
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean', // Tambahkan ini
     ];
 
 }
